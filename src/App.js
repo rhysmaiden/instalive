@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import Photo from "./Photo";
-import { isUserWhitespacable } from "@babel/types";
+import Photo from "./Components/Photo";
+import SettingsPanel from "./Components/SettingsPanel.js";
+import PhotoGrid from "./Components/PhotoGrid.js";
 
 const App = () => {
   const [photos, setPhotos] = useState([]);
@@ -98,12 +99,10 @@ const App = () => {
         "/?__a=1";
     }
 
-    console.log(request);
     const response = await fetch(request);
     const photoData = await response.json();
 
-    next_page = photoData.end_cursor;
-    console.log(photoData);
+    next_page = await photoData.end_cursor;
 
     if (page_type == "place") {
       temp_photos = [
@@ -111,7 +110,6 @@ const App = () => {
         ...photoData.data.location.edge_location_to_media.edges
       ];
     } else {
-      console.log(photoData.graphql.hashtag.edge_hashtag_to_media.edges[0]);
       temp_photos = [
         ...temp_photos,
         ...photoData.graphql.hashtag.edge_hashtag_to_media.edges
@@ -241,72 +239,15 @@ const App = () => {
         </div>
       )}
 
-      {/* SETTTINGS PANEL */}
+      <SettingsPanel
+        setBorder={() => setBorder(!border)}
+        location_name={location_name}
+        toggleLive={() => setLive(!isLive)}
+        inFullScreen={inFullScreen}
+        setFullScreen={() => setFullScreen(!inFullScreen)}
+      />
 
-      <div className="settings-pane">
-        <div className="setting-element">
-          <div className="place-title">
-            <h3>{location_name}</h3>
-          </div>
-        </div>
-
-        <div className="setting-element">
-          <div className="toggle-label">border-less</div>
-
-          <label className="switch">
-            <input type="checkbox" onChange={() => setBorder(!border)} />
-            <span class="slider round"></span>
-          </label>
-        </div>
-
-        <div className="setting-element">
-          <p className="toggle-label">live</p>
-          <label className="switch">
-            <input type="checkbox" onChange={toggleLive} />
-            <span class="slider round"></span>
-          </label>
-        </div>
-        <div className="setting-element">
-          <div className="fullscreen-setting">
-            <button
-              className="icon-button"
-              onClick={() => setFullScreen(!inFullScreen)}
-            >
-              <i
-                className={
-                  "fas " +
-                  (inFullScreen ? "fa-compress-arrows-alt" : "fa-compress")
-                }
-              ></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* PHOTO GRID */}
-
-      <div
-        className={"photo-grid " + (border ? "container" : "container-fluid")}
-      >
-        {loading ? (
-          <div class="lds-ring">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-        ) : (
-          <div></div>
-        )}
-
-        <div className="row">
-          {photos.map(photo => (
-            <div className="col-3 col-sm-3 col-md-3 col-lg-2 photo-grid">
-              <Photo src={photo.node.thumbnail_src} />
-            </div>
-          ))}
-        </div>
-      </div>
+      <PhotoGrid border={border} loading={loading} photos={photos} />
     </React.Fragment>
   );
 };
