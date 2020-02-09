@@ -219,7 +219,7 @@ input:checked + .slider:before {
 
 .settings-pane {
   text-align: right;
-  height: 50px;
+
   margin-bottom: 40px;
   margin-top: 20px;
 }

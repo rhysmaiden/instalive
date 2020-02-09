@@ -5,6 +5,8 @@ import Loader from "./Loader.js";
 const PhotoGrid = ({ border, isLive, loop, clickedItem }) => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [looper, setLooper] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (isLive) {
@@ -13,16 +15,28 @@ const PhotoGrid = ({ border, isLive, loop, clickedItem }) => {
   }, [loop]);
 
   useEffect(() => {
-    getPhotos();
+    if (isLive) {
+      getPhotos();
+      setLooper(
+        setInterval(function() {
+          getPhotos();
+        }, 10000)
+      );
+    } else {
+      if (looper != null) {
+        clearInterval(looper);
+      }
+    }
   }, [clickedItem, isLive]);
 
-  function reloop() {
-    if (isLive) {
-      setTimeout(function() {
-        getPhotos();
-      }, 10000);
+  useEffect(() => {
+    setPhotos([]);
+    if (looper != null) {
+      clearInterval(looper);
     }
-  }
+
+    getPhotos();
+  }, [clickedItem]);
 
   const getPhotos = async () => {
     if (clickedItem.name == undefined) {
@@ -60,6 +74,15 @@ const PhotoGrid = ({ border, isLive, loop, clickedItem }) => {
     next_page = await photoData.end_cursor;
 
     console.log(photoData);
+    if (photoData.status == "fail") {
+      setError("Error: Try another location");
+      getPhotos();
+      return;
+    } else {
+      if (error != "") {
+        setError("");
+      }
+    }
 
     if (clickedItem.type == "place") {
       temp_photos = [
@@ -79,7 +102,11 @@ const PhotoGrid = ({ border, isLive, loop, clickedItem }) => {
   return (
     <div className={"photo-grid " + (border ? "container" : "container-fluid")}>
       {loading ? (
-        <Loader />
+        error == "" ? (
+          <h5>{error}</h5>
+        ) : (
+          <Loader />
+        )
       ) : (
         <div className="row">
           {photos.map(photo => (
